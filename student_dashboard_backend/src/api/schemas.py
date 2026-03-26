@@ -191,7 +191,8 @@ class NotificationOut(BaseModel):
     title: str
     body: str | None = None
     is_read: bool
-    metadata: dict[str, Any]
+    # Expose "metadata" in the API response while reading from Notification.meta
+    metadata: dict[str, Any] = Field(..., validation_alias="meta", description="Notification metadata payload.")
     created_at: datetime
     read_at: datetime | None = None
 
