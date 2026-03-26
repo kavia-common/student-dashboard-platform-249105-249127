@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -109,6 +109,8 @@ def update_assignment(
 @router.delete(
     "/{assignment_id}",
     status_code=204,
+    response_class=Response,
+    response_model=None,
     responses={404: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
     summary="Delete assignment (teacher/admin)",
 )
@@ -116,10 +118,11 @@ def delete_assignment(
     assignment_id: UUID,
     _: Annotated[User, Depends(require_roles({"teacher", "admin"}))],
     db: Annotated[Session, Depends(get_db)],
-) -> None:
+) -> Response:
     assignment = db.get(Assignment, assignment_id)
     if not assignment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found")
     db.delete(assignment)
     db.commit()
-    return None
+    # Explicitly return an empty 204 response (no body).
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
