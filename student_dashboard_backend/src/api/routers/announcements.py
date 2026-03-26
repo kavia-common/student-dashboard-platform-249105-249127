@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -91,10 +91,11 @@ def delete_announcement(
     announcement_id: UUID,
     _: Annotated[User, Depends(require_roles({"teacher", "admin"}))],
     db: Annotated[Session, Depends(get_db)],
-) -> None:
+) -> Response:
     ann = db.get(Announcement, announcement_id)
     if not ann:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Announcement not found")
     db.delete(ann)
     db.commit()
-    return None
+    # Explicitly return an empty 204 response (no body).
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
