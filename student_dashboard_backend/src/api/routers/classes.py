@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -113,6 +113,8 @@ def update_class(
 @router.delete(
     "/{class_id}",
     status_code=204,
+    response_class=Response,
+    response_model=None,
     responses={404: {"model": ErrorResponse}, 403: {"model": ErrorResponse}},
     summary="Delete a class (teacher/admin)",
 )
@@ -120,10 +122,11 @@ def delete_class(
     class_id: UUID,
     _: Annotated[User, Depends(require_roles({"teacher", "admin"}))],
     db: Annotated[Session, Depends(get_db)],
-) -> None:
+) -> Response:
     clazz = db.get(Class, class_id)
     if not clazz:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found")
     db.delete(clazz)
     db.commit()
-    return None
+    # Explicitly return an empty 204 response (no body).
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

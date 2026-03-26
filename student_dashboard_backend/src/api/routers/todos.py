@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -86,6 +86,8 @@ def update_todo(
 @router.delete(
     "/{todo_id}",
     status_code=204,
+    response_class=Response,
+    response_model=None,
     responses={404: {"model": ErrorResponse}},
     summary="Delete a todo item",
 )
@@ -93,10 +95,11 @@ def delete_todo(
     todo_id: UUID,
     user: Annotated[User, Depends(get_current_user)],
     db: Annotated[Session, Depends(get_db)],
-) -> None:
+) -> Response:
     todo = db.get(Todo, todo_id)
     if not todo or todo.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
     db.delete(todo)
     db.commit()
-    return None
+    # Explicitly return an empty 204 response (no body).
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
