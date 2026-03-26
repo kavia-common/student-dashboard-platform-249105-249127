@@ -28,12 +28,12 @@ def login(payload: LoginRequest, db: Annotated[Session, Depends(get_db)]) -> Tok
 
     roles = get_user_roles(db, user.id)
     token, expires_at = create_access_token(user_id=user.id, email=user.email, roles=roles)
+    # create_access_token returns a tz-aware UTC datetime; compute lifetime in seconds.
+    expires_in = int((expires_at - expires_at.astimezone(timezone.utc)).total_seconds())
     return TokenResponse(
         access_token=token,
         token_type="bearer",
-        expires_in=int((expires_at - expires_at.replace(tzinfo=timezone.utc)).total_seconds() or 0)
-        if expires_at.tzinfo is None
-        else int((expires_at - expires_at.astimezone(timezone.utc)).total_seconds() or 0),
+        expires_in=expires_in,
         user_id=user.id,
         roles=roles,
     )
