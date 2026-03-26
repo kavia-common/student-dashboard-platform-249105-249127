@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 from collections.abc import Generator
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 import pytest
+
+# Ensure the backend package root is importable in tests (so `import src...` works)
+_BACKEND_ROOT = Path(__file__).resolve().parents[1]
+if str(_BACKEND_ROOT) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_ROOT))
 
 
 @dataclass(frozen=True)
